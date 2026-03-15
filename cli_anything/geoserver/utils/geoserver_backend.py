@@ -3,13 +3,14 @@
 Covers 100% of the GeoServer REST API endpoints plus OGC service calls.
 """
 
-import json
 import os
+
 import requests
 
 
 class GeoServerError(Exception):
     """Error from GeoServer REST API."""
+
     def __init__(self, message, status_code=None, response_text=None):
         super().__init__(message)
         self.status_code = status_code
@@ -27,10 +28,12 @@ class GeoServerClient:
         self.auth = (self.username, self.password)
         self.session = requests.Session()
         self.session.auth = self.auth
-        self.session.headers.update({
-            "Accept": "application/json",
-            "Content-Type": "application/json",
-        })
+        self.session.headers.update(
+            {
+                "Accept": "application/json",
+                "Content-Type": "application/json",
+            }
+        )
 
     def _url(self, path):
         return f"{self.rest_url}/{path.lstrip('/')}"
@@ -39,13 +42,13 @@ class GeoServerClient:
         url = self._url(path)
         try:
             resp = self.session.request(method, url, **kwargs)
-        except requests.ConnectionError:
+        except requests.ConnectionError as exc:
             raise GeoServerError(
                 f"Cannot connect to GeoServer at {self.base_url}\n"
                 "Make sure GeoServer is running. Start with:\n"
                 "  docker run -p 8080:8080 docker.io/kartoza/geoserver:latest\n"
                 "Or set GEOSERVER_URL environment variable."
-            )
+            ) from exc
         if resp.status_code >= 400:
             raise GeoServerError(
                 f"GeoServer API error: {resp.status_code} {resp.reason}",
@@ -159,9 +162,7 @@ class GeoServerClient:
         payload = {
             "dataStore": {
                 "name": name,
-                "connectionParameters": {
-                    "entry": [{"@key": k, "$": v} for k, v in connection_params.items()]
-                },
+                "connectionParameters": {"entry": [{"@key": k, "$": v} for k, v in connection_params.items()]},
             }
         }
         self._post(f"workspaces/{workspace}/datastores.json", json=payload)
@@ -282,21 +283,28 @@ class GeoServerClient:
         return self._list_helper(path, "featureTypes", "featureType")
 
     def get_featuretype(self, workspace, store, name):
-        return self._get(f"workspaces/{workspace}/datastores/{store}/featuretypes/{name}.json").json().get("featureType", {})
+        return (
+            self._get(f"workspaces/{workspace}/datastores/{store}/featuretypes/{name}.json")
+            .json()
+            .get("featureType", {})
+        )
 
     def create_featuretype(self, workspace, store, name, **kwargs):
-        self._post(f"workspaces/{workspace}/datastores/{store}/featuretypes.json",
-                   json={"featureType": {"name": name, **kwargs}})
+        self._post(
+            f"workspaces/{workspace}/datastores/{store}/featuretypes.json",
+            json={"featureType": {"name": name, **kwargs}},
+        )
         return {"workspace": workspace, "store": store, "name": name, "created": True}
 
     def update_featuretype(self, workspace, store, name, **kwargs):
-        self._put(f"workspaces/{workspace}/datastores/{store}/featuretypes/{name}.json",
-                  json={"featureType": kwargs})
+        self._put(f"workspaces/{workspace}/datastores/{store}/featuretypes/{name}.json", json={"featureType": kwargs})
         return {"workspace": workspace, "store": store, "name": name, "updated": True}
 
     def delete_featuretype(self, workspace, store, name, recurse=False):
-        self._delete(f"workspaces/{workspace}/datastores/{store}/featuretypes/{name}",
-                     params={"recurse": "true"} if recurse else {})
+        self._delete(
+            f"workspaces/{workspace}/datastores/{store}/featuretypes/{name}",
+            params={"recurse": "true"} if recurse else {},
+        )
         return {"workspace": workspace, "store": store, "name": name, "deleted": True}
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -311,21 +319,25 @@ class GeoServerClient:
         return self._list_helper(path, "coverages", "coverage")
 
     def get_coverage(self, workspace, store, name):
-        return self._get(f"workspaces/{workspace}/coveragestores/{store}/coverages/{name}.json").json().get("coverage", {})
+        return (
+            self._get(f"workspaces/{workspace}/coveragestores/{store}/coverages/{name}.json").json().get("coverage", {})
+        )
 
     def create_coverage(self, workspace, store, name, **kwargs):
-        self._post(f"workspaces/{workspace}/coveragestores/{store}/coverages.json",
-                   json={"coverage": {"name": name, **kwargs}})
+        self._post(
+            f"workspaces/{workspace}/coveragestores/{store}/coverages.json", json={"coverage": {"name": name, **kwargs}}
+        )
         return {"workspace": workspace, "store": store, "name": name, "created": True}
 
     def update_coverage(self, workspace, store, name, **kwargs):
-        self._put(f"workspaces/{workspace}/coveragestores/{store}/coverages/{name}.json",
-                  json={"coverage": kwargs})
+        self._put(f"workspaces/{workspace}/coveragestores/{store}/coverages/{name}.json", json={"coverage": kwargs})
         return {"workspace": workspace, "store": store, "name": name, "updated": True}
 
     def delete_coverage(self, workspace, store, name, recurse=False):
-        self._delete(f"workspaces/{workspace}/coveragestores/{store}/coverages/{name}",
-                     params={"recurse": "true"} if recurse else {})
+        self._delete(
+            f"workspaces/{workspace}/coveragestores/{store}/coverages/{name}",
+            params={"recurse": "true"} if recurse else {},
+        )
         return {"workspace": workspace, "store": store, "name": name, "deleted": True}
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -343,18 +355,19 @@ class GeoServerClient:
         return self._get(f"workspaces/{workspace}/wmsstores/{store}/wmslayers/{name}.json").json().get("wmsLayer", {})
 
     def create_wmslayer(self, workspace, store, name, **kwargs):
-        self._post(f"workspaces/{workspace}/wmsstores/{store}/wmslayers.json",
-                   json={"wmsLayer": {"name": name, **kwargs}})
+        self._post(
+            f"workspaces/{workspace}/wmsstores/{store}/wmslayers.json", json={"wmsLayer": {"name": name, **kwargs}}
+        )
         return {"workspace": workspace, "store": store, "name": name, "created": True}
 
     def update_wmslayer(self, workspace, store, name, **kwargs):
-        self._put(f"workspaces/{workspace}/wmsstores/{store}/wmslayers/{name}.json",
-                  json={"wmsLayer": kwargs})
+        self._put(f"workspaces/{workspace}/wmsstores/{store}/wmslayers/{name}.json", json={"wmsLayer": kwargs})
         return {"workspace": workspace, "store": store, "name": name, "updated": True}
 
     def delete_wmslayer(self, workspace, store, name, recurse=False):
-        self._delete(f"workspaces/{workspace}/wmsstores/{store}/wmslayers/{name}",
-                     params={"recurse": "true"} if recurse else {})
+        self._delete(
+            f"workspaces/{workspace}/wmsstores/{store}/wmslayers/{name}", params={"recurse": "true"} if recurse else {}
+        )
         return {"workspace": workspace, "store": store, "name": name, "deleted": True}
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -369,21 +382,25 @@ class GeoServerClient:
         return self._list_helper(path, "wmtsLayers", "wmtsLayer")
 
     def get_wmtslayer(self, workspace, store, name):
-        return self._get(f"workspaces/{workspace}/wmtsstores/{store}/wmtslayers/{name}.json").json().get("wmtsLayer", {})
+        return (
+            self._get(f"workspaces/{workspace}/wmtsstores/{store}/wmtslayers/{name}.json").json().get("wmtsLayer", {})
+        )
 
     def create_wmtslayer(self, workspace, store, name, **kwargs):
-        self._post(f"workspaces/{workspace}/wmtsstores/{store}/wmtslayers.json",
-                   json={"wmtsLayer": {"name": name, **kwargs}})
+        self._post(
+            f"workspaces/{workspace}/wmtsstores/{store}/wmtslayers.json", json={"wmtsLayer": {"name": name, **kwargs}}
+        )
         return {"workspace": workspace, "store": store, "name": name, "created": True}
 
     def update_wmtslayer(self, workspace, store, name, **kwargs):
-        self._put(f"workspaces/{workspace}/wmtsstores/{store}/wmtslayers/{name}.json",
-                  json={"wmtsLayer": kwargs})
+        self._put(f"workspaces/{workspace}/wmtsstores/{store}/wmtslayers/{name}.json", json={"wmtsLayer": kwargs})
         return {"workspace": workspace, "store": store, "name": name, "updated": True}
 
     def delete_wmtslayer(self, workspace, store, name, recurse=False):
-        self._delete(f"workspaces/{workspace}/wmtsstores/{store}/wmtslayers/{name}",
-                     params={"recurse": "true"} if recurse else {})
+        self._delete(
+            f"workspaces/{workspace}/wmtsstores/{store}/wmtslayers/{name}",
+            params={"recurse": "true"} if recurse else {},
+        )
         return {"workspace": workspace, "store": store, "name": name, "deleted": True}
 
     # ═══════════════════════════════════════════════════════════════════════
@@ -422,7 +439,7 @@ class GeoServerClient:
 
     def create_layergroup(self, name, layers, workspace=None, **kwargs):
         path = f"workspaces/{workspace}/layergroups.json" if workspace else "layergroups.json"
-        published = [{"@type": "layer", "name": l} for l in layers]
+        published = [{"@type": "layer", "name": lyr} for lyr in layers]
         self._post(path, json={"layerGroup": {"name": name, "layers": {"published": published}, **kwargs}})
         return {"name": name, "created": True}
 
@@ -456,17 +473,20 @@ class GeoServerClient:
     def create_style(self, name, sld_body, workspace=None):
         path = f"workspaces/{workspace}/styles" if workspace else "styles"
         self._post(f"{path}.json", json={"style": {"name": name, "filename": f"{name}.sld"}})
-        self._request("PUT", f"{path}/{name}",
-                      data=sld_body.encode("utf-8"),
-                      headers={"Content-Type": "application/vnd.ogc.sld+xml"})
+        self._request(
+            "PUT",
+            f"{path}/{name}",
+            data=sld_body.encode("utf-8"),
+            headers={"Content-Type": "application/vnd.ogc.sld+xml"},
+        )
         return {"name": name, "created": True}
 
     def update_style(self, name, sld_body, workspace=None):
         """Update (re-upload) the SLD body of an existing style."""
         path = f"workspaces/{workspace}/styles/{name}" if workspace else f"styles/{name}"
-        self._request("PUT", path,
-                      data=sld_body.encode("utf-8"),
-                      headers={"Content-Type": "application/vnd.ogc.sld+xml"})
+        self._request(
+            "PUT", path, data=sld_body.encode("utf-8"), headers={"Content-Type": "application/vnd.ogc.sld+xml"}
+        )
         return {"name": name, "updated": True}
 
     def delete_style(self, name, workspace=None, purge=False):
@@ -579,9 +599,7 @@ class GeoServerClient:
     def create_template(self, name, body, workspace=None, store=None, featuretype=None):
         """Upload a Freemarker template."""
         base = self._template_path(workspace, store, featuretype)
-        self._request("PUT", f"{base}/{name}",
-                      data=body.encode("utf-8"),
-                      headers={"Content-Type": "text/plain"})
+        self._request("PUT", f"{base}/{name}", data=body.encode("utf-8"), headers={"Content-Type": "text/plain"})
         return {"name": name, "created": True}
 
     def delete_template(self, name, workspace=None, store=None, featuretype=None):
@@ -622,8 +640,7 @@ class GeoServerClient:
 
     def put_resource(self, path, data, content_type="application/octet-stream"):
         """PUT /rest/resource/{path} — upload/replace a file."""
-        self._request("PUT", f"resource/{path}",
-                      data=data, headers={"Content-Type": content_type})
+        self._request("PUT", f"resource/{path}", data=data, headers={"Content-Type": content_type})
         return {"path": path, "uploaded": True}
 
     def delete_resource(self, path):
@@ -652,8 +669,7 @@ class GeoServerClient:
         return {"username": username, "created": True}
 
     def update_user(self, username, service="default", **kwargs):
-        self._put(f"security/usergroup/service/{service}/user/{username}.json",
-                  json={"user": kwargs})
+        self._put(f"security/usergroup/service/{service}/user/{username}.json", json={"user": kwargs})
         return {"username": username, "updated": True}
 
     def delete_user(self, username, service="default"):
@@ -795,8 +811,7 @@ class GeoServerClient:
         return self._get("security/masterpw.json").json()
 
     def update_master_password(self, old_password, new_password):
-        self._put("security/masterpw.json",
-                  json={"oldMasterPassword": old_password, "newMasterPassword": new_password})
+        self._put("security/masterpw.json", json={"oldMasterPassword": old_password, "newMasterPassword": new_password})
         return {"updated": True}
 
     # ── Auth filters and providers ──
@@ -831,11 +846,14 @@ class GeoServerClient:
         url = self._gwc_url(path)
         try:
             resp = self.session.request(method, url, **kwargs)
-        except requests.ConnectionError:
-            raise GeoServerError(f"Cannot connect to GeoWebCache at {url}")
+        except requests.ConnectionError as exc:
+            raise GeoServerError(f"Cannot connect to GeoWebCache at {url}") from exc
         if resp.status_code >= 400:
-            raise GeoServerError(f"GWC API error: {resp.status_code} {resp.reason}",
-                                 status_code=resp.status_code, response_text=resp.text)
+            raise GeoServerError(
+                f"GWC API error: {resp.status_code} {resp.reason}",
+                status_code=resp.status_code,
+                response_text=resp.text,
+            )
         return resp
 
     # ── GWC Layers ──
@@ -869,8 +887,9 @@ class GeoServerClient:
     def gwc_terminate_seed(self, layer_name=None):
         """POST /gwc/rest/seed[/{layer}] with kill_all — terminate tasks."""
         path = f"seed/{layer_name}" if layer_name else "seed"
-        self._gwc_request("POST", path, data="kill_all=all".encode(),
-                          headers={"Content-Type": "application/x-www-form-urlencoded"})
+        self._gwc_request(
+            "POST", path, data=b"kill_all=all", headers={"Content-Type": "application/x-www-form-urlencoded"}
+        )
         return {"terminated": True}
 
     def gwc_mass_truncate(self, request_type="truncateLayer", layer_name=None):
@@ -947,25 +966,62 @@ class GeoServerClient:
         resp = self._ogc_request("wms", {"service": "WMS", "version": version, "request": "GetCapabilities"})
         return resp.text
 
-    def wms_getmap(self, layers, bbox, width=800, height=600, srs="EPSG:4326",
-                   format="image/png", styles="", transparent=True, **extra):
+    def wms_getmap(
+        self,
+        layers,
+        bbox,
+        width=800,
+        height=600,
+        srs="EPSG:4326",
+        format="image/png",
+        styles="",
+        transparent=True,
+        **extra,
+    ):
         params = {
-            "service": "WMS", "version": "1.1.1", "request": "GetMap",
-            "layers": layers, "bbox": bbox, "width": width, "height": height,
-            "srs": srs, "format": format, "styles": styles,
-            "transparent": str(transparent).lower(), **extra,
+            "service": "WMS",
+            "version": "1.1.1",
+            "request": "GetMap",
+            "layers": layers,
+            "bbox": bbox,
+            "width": width,
+            "height": height,
+            "srs": srs,
+            "format": format,
+            "styles": styles,
+            "transparent": str(transparent).lower(),
+            **extra,
         }
         return self._ogc_request("wms", params).content
 
-    def wms_getfeatureinfo(self, layers, bbox, width, height, x, y,
-                           query_layers=None, info_format="application/json",
-                           srs="EPSG:4326", feature_count=10, **extra):
+    def wms_getfeatureinfo(
+        self,
+        layers,
+        bbox,
+        width,
+        height,
+        x,
+        y,
+        query_layers=None,
+        info_format="application/json",
+        srs="EPSG:4326",
+        feature_count=10,
+        **extra,
+    ):
         params = {
-            "service": "WMS", "version": "1.1.1", "request": "GetFeatureInfo",
-            "layers": layers, "query_layers": query_layers or layers,
-            "bbox": bbox, "width": width, "height": height,
-            "x": x, "y": y, "srs": srs,
-            "info_format": info_format, "feature_count": feature_count,
+            "service": "WMS",
+            "version": "1.1.1",
+            "request": "GetFeatureInfo",
+            "layers": layers,
+            "query_layers": query_layers or layers,
+            "bbox": bbox,
+            "width": width,
+            "height": height,
+            "x": x,
+            "y": y,
+            "srs": srs,
+            "info_format": info_format,
+            "feature_count": feature_count,
             **extra,
         }
         resp = self._ogc_request("wms", params)
@@ -973,11 +1029,15 @@ class GeoServerClient:
             return resp.json()
         return resp.text
 
-    def wms_getlegendgraphic(self, layer, format="image/png", width=20, height=20,
-                             style=None, **extra):
+    def wms_getlegendgraphic(self, layer, format="image/png", width=20, height=20, style=None, **extra):
         params = {
-            "service": "WMS", "version": "1.1.1", "request": "GetLegendGraphic",
-            "layer": layer, "format": format, "width": width, "height": height,
+            "service": "WMS",
+            "version": "1.1.1",
+            "request": "GetLegendGraphic",
+            "layer": layer,
+            "format": format,
+            "width": width,
+            "height": height,
             **extra,
         }
         if style:
@@ -992,19 +1052,35 @@ class GeoServerClient:
 
     def wfs_describefeaturetype(self, typenames, version="2.0.0", output_format="application/json"):
         params = {
-            "service": "WFS", "version": version, "request": "DescribeFeatureType",
-            "typeNames": typenames, "outputFormat": output_format,
+            "service": "WFS",
+            "version": version,
+            "request": "DescribeFeatureType",
+            "typeNames": typenames,
+            "outputFormat": output_format,
         }
         resp = self._ogc_request("wfs", params)
         if "json" in output_format:
             return resp.json()
         return resp.text
 
-    def wfs_getfeature(self, typenames, format="application/json", max_features=None,
-                       cql_filter=None, bbox=None, srs="EPSG:4326", **extra):
+    def wfs_getfeature(
+        self,
+        typenames,
+        format="application/json",
+        max_features=None,
+        cql_filter=None,
+        bbox=None,
+        srs="EPSG:4326",
+        **extra,
+    ):
         params = {
-            "service": "WFS", "version": "2.0.0", "request": "GetFeature",
-            "typeNames": typenames, "outputFormat": format, "srsName": srs, **extra,
+            "service": "WFS",
+            "version": "2.0.0",
+            "request": "GetFeature",
+            "typeNames": typenames,
+            "outputFormat": format,
+            "srsName": srs,
+            **extra,
         }
         if max_features:
             params["count"] = max_features
@@ -1029,8 +1105,12 @@ class GeoServerClient:
 
     def wcs_getcoverage(self, coverage_id, format="image/tiff", bbox=None, srs="EPSG:4326", **extra):
         params = {
-            "service": "WCS", "version": "2.0.1", "request": "GetCoverage",
-            "CoverageId": coverage_id, "format": format, **extra,
+            "service": "WCS",
+            "version": "2.0.1",
+            "request": "GetCoverage",
+            "CoverageId": coverage_id,
+            "format": format,
+            **extra,
         }
         if bbox:
             parts = bbox.split(",")
@@ -1045,26 +1125,38 @@ class GeoServerClient:
     def upload_shapefile(self, workspace, store, zip_path):
         with open(zip_path, "rb") as f:
             data = f.read()
-        self._request("PUT", f"workspaces/{workspace}/datastores/{store}/file.shp",
-                      data=data, headers={"Content-Type": "application/zip"})
+        self._request(
+            "PUT",
+            f"workspaces/{workspace}/datastores/{store}/file.shp",
+            data=data,
+            headers={"Content-Type": "application/zip"},
+        )
         return {"workspace": workspace, "store": store, "uploaded": True}
 
     def upload_geotiff(self, workspace, store, tiff_path):
         with open(tiff_path, "rb") as f:
             data = f.read()
-        self._request("PUT", f"workspaces/{workspace}/coveragestores/{store}/file.geotiff",
-                      data=data, headers={"Content-Type": "image/tiff"})
+        self._request(
+            "PUT",
+            f"workspaces/{workspace}/coveragestores/{store}/file.geotiff",
+            data=data,
+            headers={"Content-Type": "image/tiff"},
+        )
         return {"workspace": workspace, "store": store, "uploaded": True}
 
     def upload_geopackage(self, workspace, store, gpkg_path):
         with open(gpkg_path, "rb") as f:
             data = f.read()
-        self._request("PUT", f"workspaces/{workspace}/datastores/{store}/file.gpkg",
-                      data=data, headers={"Content-Type": "application/geopackage+sqlite3"})
+        self._request(
+            "PUT",
+            f"workspaces/{workspace}/datastores/{store}/file.gpkg",
+            data=data,
+            headers={"Content-Type": "application/geopackage+sqlite3"},
+        )
         return {"workspace": workspace, "store": store, "uploaded": True}
 
     def upload_style(self, name, sld_path, workspace=None):
-        with open(sld_path, "r") as f:
+        with open(sld_path) as f:
             sld_body = f.read()
         return self.create_style(name, sld_body, workspace=workspace)
 

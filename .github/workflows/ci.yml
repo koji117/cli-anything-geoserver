@@ -1,0 +1,104 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --group dev
+      - run: uv run ruff check .
+      - run: uv run ruff format --check .
+
+  test:
+    name: Test (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: uv sync --group dev
+      - name: Run unit tests
+        run: uv run pytest cli_anything/geoserver/tests/test_core.py -v --tb=short
+      - name: Verify CLI installs and runs
+        run: |
+          uv run cli-anything-geoserver --version
+          uv run cli-anything-geoserver --help
+      - name: Subprocess tests (force-installed)
+        run: |
+          uv pip install -e .
+          CLI_ANYTHING_FORCE_INSTALLED=1 uv run pytest cli_anything/geoserver/tests/test_core.py -v -k "Subprocess" --tb=short
+
+  e2e:
+    name: E2E (GeoServer)
+    runs-on: ubuntu-latest
+    services:
+      geoserver:
+        image: docker.io/kartoza/geoserver:2.26.1
+        env:
+          GEOSERVER_ADMIN_USER: admin
+          GEOSERVER_ADMIN_PASSWORD: geoserver
+        ports:
+          - 8080:8080
+        options: >-
+          --health-cmd "curl -sf http://localhost:8080/geoserver/web/ || exit 1"
+          --health-interval 15s
+          --health-timeout 10s
+          --health-retries 20
+          --health-start-period 120s
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv sync --group dev
+      - name: Wait for GeoServer
+        run: |
+          for i in $(seq 1 30); do
+            if curl -sf -u admin:geoserver http://localhost:8080/geoserver/rest/about/version.json > /dev/null 2>&1; then
+              echo "GeoServer is ready"
+              break
+            fi
+            echo "Waiting for GeoServer... ($i/30)"
+            sleep 5
+          done
+      - name: Run E2E tests
+        env:
+          GEOSERVER_URL: http://localhost:8080/geoserver
+          GEOSERVER_USER: admin
+          GEOSERVER_PASSWORD: geoserver
+        run: uv run pytest cli_anything/geoserver/tests/test_full_e2e.py -v -s --tb=short
+      - name: E2E subprocess workflow
+        env:
+          GEOSERVER_URL: http://localhost:8080/geoserver
+          GEOSERVER_USER: admin
+          GEOSERVER_PASSWORD: geoserver
+        run: |
+          uv pip install -e .
+          CLI_ANYTHING_FORCE_INSTALLED=1 uv run pytest cli_anything/geoserver/tests/test_full_e2e.py -v -s -k "CLISubprocess" --tb=short
+
+  build:
+    name: Build package
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+      - run: uv build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: dist/

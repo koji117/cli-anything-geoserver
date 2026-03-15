@@ -1,6 +1,5 @@
 """Stateful session management with undo/redo for GeoServer CLI."""
 
-import copy
 import json
 import time
 
@@ -8,8 +7,7 @@ import time
 class Session:
     """Manages stateful CLI session with connection context and undo/redo."""
 
-    def __init__(self, url="http://localhost:8080/geoserver", username="admin",
-                 password="geoserver"):
+    def __init__(self, url="http://localhost:8080/geoserver", username="admin", password="geoserver"):
         self.url = url
         self.username = username
         self.password = password
@@ -75,7 +73,7 @@ class Session:
     @classmethod
     def load(cls, path):
         """Load session from file."""
-        with open(path, "r") as f:
+        with open(path) as f:
             return cls.from_dict(json.load(f))
 
     def status(self):

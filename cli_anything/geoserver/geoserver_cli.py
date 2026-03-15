@@ -2,16 +2,15 @@
 
 import json as json_mod
 import os
-import sys
 import shlex
 
 import click
 
-from cli_anything.geoserver.utils.geoserver_backend import GeoServerClient, GeoServerError
 from cli_anything.geoserver.core.session import Session
-
+from cli_anything.geoserver.utils.geoserver_backend import GeoServerClient, GeoServerError
 
 # ── Helpers ──────────────────────────────────────────────────────────────
+
 
 def _output(ctx, data, human_fn=None):
     """Output data as JSON or human-readable."""
@@ -31,10 +30,15 @@ def _get_client(ctx):
 def _handle_error(ctx, e):
     """Handle GeoServerError."""
     if ctx.obj.get("json_mode"):
-        click.echo(json_mod.dumps({
-            "error": str(e),
-            "status_code": getattr(e, "status_code", None),
-        }), err=True)
+        click.echo(
+            json_mod.dumps(
+                {
+                    "error": str(e),
+                    "status_code": getattr(e, "status_code", None),
+                }
+            ),
+            err=True,
+        )
     else:
         click.echo(f"Error: {e}", err=True)
         if hasattr(e, "response_text") and e.response_text:
@@ -44,9 +48,9 @@ def _handle_error(ctx, e):
 
 # ── Main CLI Group ───────────────────────────────────────────────────────
 
+
 @click.group(invoke_without_command=True)
-@click.option("--url", envvar="GEOSERVER_URL", default="http://localhost:8080/geoserver",
-              help="GeoServer base URL")
+@click.option("--url", envvar="GEOSERVER_URL", default="http://localhost:8080/geoserver", help="GeoServer base URL")
 @click.option("--user", envvar="GEOSERVER_USER", default="admin", help="Username")
 @click.option("--password", envvar="GEOSERVER_PASSWORD", default="geoserver", help="Password")
 @click.option("--workspace", "-w", default=None, help="Default workspace context")
@@ -86,6 +90,7 @@ def cli(ctx, url, user, password, workspace, json_mode, session_path):
 
 
 # ── REPL ─────────────────────────────────────────────────────────────────
+
 
 @cli.command(hidden=True)
 @click.pass_context
@@ -291,6 +296,7 @@ def repl(ctx):
 
 # ── Server Commands ──────────────────────────────────────────────────────
 
+
 @cli.group()
 @click.pass_context
 def server(ctx):
@@ -358,6 +364,7 @@ def server_manifests(ctx):
 
 
 # ── Workspace Commands ───────────────────────────────────────────────────
+
 
 @cli.group()
 @click.pass_context
@@ -455,6 +462,7 @@ def workspace_delete(ctx, name, recurse):
 
 # ── Namespace Commands ───────────────────────────────────────────────────
 
+
 @cli.group()
 @click.pass_context
 def namespace(ctx):
@@ -530,6 +538,7 @@ def namespace_delete(ctx, prefix):
 
 # ── Store Commands ───────────────────────────────────────────────────────
 
+
 @cli.group()
 @click.pass_context
 def store(ctx):
@@ -539,8 +548,9 @@ def store(ctx):
 
 @store.command("list")
 @click.option("--workspace", "-w", required=True, help="Workspace name")
-@click.option("--type", "store_type", type=click.Choice(["data", "coverage", "all"]),
-              default="all", help="Store type filter")
+@click.option(
+    "--type", "store_type", type=click.Choice(["data", "coverage", "all"]), default="all", help="Store type filter"
+)
 @click.pass_context
 def store_list(ctx, workspace, store_type):
     """List data stores in a workspace."""
@@ -579,8 +589,7 @@ def _print_store_list(stores):
 @store.command("get")
 @click.argument("name")
 @click.option("--workspace", "-w", required=True, help="Workspace name")
-@click.option("--type", "store_type", type=click.Choice(["data", "coverage"]),
-              default="data", help="Store type")
+@click.option("--type", "store_type", type=click.Choice(["data", "coverage"]), default="data", help="Store type")
 @click.pass_context
 def store_get(ctx, name, workspace, store_type):
     """Get store details."""
@@ -677,8 +686,7 @@ def store_update_coveragestore(ctx, name, workspace, url, store_type, enabled):
 @store.command("delete")
 @click.argument("name")
 @click.option("--workspace", "-w", required=True, help="Workspace name")
-@click.option("--type", "store_type", type=click.Choice(["data", "coverage"]),
-              default="data", help="Store type")
+@click.option("--type", "store_type", type=click.Choice(["data", "coverage"]), default="data", help="Store type")
 @click.option("--recurse", is_flag=True, help="Recursively delete contents")
 @click.pass_context
 def store_delete(ctx, name, workspace, store_type, recurse):
@@ -697,8 +705,7 @@ def store_delete(ctx, name, workspace, store_type, recurse):
 @store.command("upload-shapefile")
 @click.argument("name")
 @click.option("--workspace", "-w", required=True, help="Workspace name")
-@click.option("--file", "file_path", required=True, type=click.Path(exists=True),
-              help="Path to zipped shapefile")
+@click.option("--file", "file_path", required=True, type=click.Path(exists=True), help="Path to zipped shapefile")
 @click.pass_context
 def store_upload_shapefile(ctx, name, workspace, file_path):
     """Upload a zipped shapefile to create a data store."""
@@ -713,8 +720,7 @@ def store_upload_shapefile(ctx, name, workspace, file_path):
 @store.command("upload-geotiff")
 @click.argument("name")
 @click.option("--workspace", "-w", required=True, help="Workspace name")
-@click.option("--file", "file_path", required=True, type=click.Path(exists=True),
-              help="Path to GeoTIFF file")
+@click.option("--file", "file_path", required=True, type=click.Path(exists=True), help="Path to GeoTIFF file")
 @click.pass_context
 def store_upload_geotiff(ctx, name, workspace, file_path):
     """Upload a GeoTIFF to create a coverage store."""
@@ -727,6 +733,7 @@ def store_upload_geotiff(ctx, name, workspace, file_path):
 
 
 # ── WMS Store Commands ───────────────────────────────────────────────────
+
 
 @cli.group()
 @click.pass_context
@@ -815,6 +822,7 @@ def wmsstore_delete(ctx, name, workspace, recurse):
 
 # ── WMTS Store Commands ──────────────────────────────────────────────────
 
+
 @cli.group()
 @click.pass_context
 def wmtsstore(ctx):
@@ -901,6 +909,7 @@ def wmtsstore_delete(ctx, name, workspace, recurse):
 
 
 # ── WMS Layer Commands ───────────────────────────────────────────────────
+
 
 @cli.group()
 @click.pass_context
@@ -990,6 +999,7 @@ def wmslayer_delete(ctx, name, workspace, store, recurse):
 
 # ── WMTS Layer Commands ──────────────────────────────────────────────────
 
+
 @cli.group()
 @click.pass_context
 def wmtslayer(ctx):
@@ -1078,6 +1088,7 @@ def wmtslayer_delete(ctx, name, workspace, store, recurse):
 
 # ── Layer Commands ───────────────────────────────────────────────────────
 
+
 @cli.group()
 @click.pass_context
 def layer(ctx):
@@ -1105,8 +1116,8 @@ def _print_layer_list(layers):
         return
     click.echo(f"{'Name':<40}")
     click.echo("-" * 40)
-    for l in layers:
-        name = l.get("name", "") if isinstance(l, dict) else str(l)
+    for lyr in layers:
+        name = lyr.get("name", "") if isinstance(lyr, dict) else str(lyr)
         click.echo(f"{name:<40}")
 
 
@@ -1167,8 +1178,7 @@ def layer_delete(ctx, name, workspace, recurse):
 @click.argument("name")
 @click.option("--workspace", "-w", required=True, help="Workspace name")
 @click.option("--store", "-s", required=True, help="Store name")
-@click.option("--type", "layer_type", type=click.Choice(["feature", "coverage"]),
-              default="feature", help="Layer type")
+@click.option("--type", "layer_type", type=click.Choice(["feature", "coverage"]), default="feature", help="Layer type")
 @click.pass_context
 def layer_publish(ctx, name, workspace, store, layer_type):
     """Publish a resource as a layer."""
@@ -1184,6 +1194,7 @@ def layer_publish(ctx, name, workspace, store, layer_type):
 
 
 # ── Style Commands ───────────────────────────────────────────────────────
+
 
 @cli.group()
 @click.pass_context
@@ -1238,15 +1249,14 @@ def style_get(ctx, name, workspace, body):
 
 @style.command("create")
 @click.argument("name")
-@click.option("--file", "sld_file", required=True, type=click.Path(exists=True),
-              help="Path to SLD file")
+@click.option("--file", "sld_file", required=True, type=click.Path(exists=True), help="Path to SLD file")
 @click.option("--workspace", "-w", default=None, help="Workspace name")
 @click.pass_context
 def style_create(ctx, name, sld_file, workspace):
     """Create a style from an SLD file."""
     try:
         client = _get_client(ctx)
-        with open(sld_file, "r") as f:
+        with open(sld_file) as f:
             sld_body = f.read()
         result = client.create_style(name, sld_body, workspace=workspace)
         _output(ctx, result, lambda d: click.echo(f"Style '{name}' created."))
@@ -1256,15 +1266,14 @@ def style_create(ctx, name, sld_file, workspace):
 
 @style.command("update")
 @click.argument("name")
-@click.option("--file", "sld_file", required=True, type=click.Path(exists=True),
-              help="Path to SLD file")
+@click.option("--file", "sld_file", required=True, type=click.Path(exists=True), help="Path to SLD file")
 @click.option("--workspace", "-w", default=None, help="Workspace name")
 @click.pass_context
 def style_update(ctx, name, sld_file, workspace):
     """Update a style from an SLD file."""
     try:
         client = _get_client(ctx)
-        with open(sld_file, "r") as f:
+        with open(sld_file) as f:
             sld_body = f.read()
         result = client.update_style(name, sld_body, workspace=workspace)
         _output(ctx, result, lambda d: click.echo(f"Style '{name}' updated."))
@@ -1288,6 +1297,7 @@ def style_delete(ctx, name, workspace, purge):
 
 
 # ── Layer Group Commands ─────────────────────────────────────────────────
+
 
 @cli.group()
 @click.pass_context
@@ -1350,7 +1360,7 @@ def layergroup_update(ctx, name, workspace, layer, title):
         client = _get_client(ctx)
         kwargs = {}
         if layer:
-            published = [{"@type": "layer", "name": l} for l in layer]
+            published = [{"@type": "layer", "name": lyr} for lyr in layer]
             kwargs["layers"] = {"published": published}
         if title is not None:
             kwargs["title"] = title
@@ -1375,6 +1385,7 @@ def layergroup_delete(ctx, name, workspace):
 
 
 # ── Resource Commands ────────────────────────────────────────────────────
+
 
 @cli.group()
 @click.pass_context
@@ -1424,8 +1435,7 @@ def resource_get(ctx, path, output):
 
 @resource.command("put")
 @click.argument("path")
-@click.option("--file", "file_path", required=True, type=click.Path(exists=True),
-              help="Local file to upload")
+@click.option("--file", "file_path", required=True, type=click.Path(exists=True), help="Local file to upload")
 @click.option("--content-type", default="application/octet-stream", help="Content type")
 @click.pass_context
 def resource_put(ctx, path, file_path, content_type):
@@ -1454,6 +1464,7 @@ def resource_delete(ctx, path):
 
 
 # ── Template Commands ────────────────────────────────────────────────────
+
 
 @cli.group()
 @click.pass_context
@@ -1495,8 +1506,9 @@ def template_get(ctx, name, workspace, store, featuretype):
 
 @template.command("create")
 @click.argument("name")
-@click.option("--file", "template_file", required=True, type=click.Path(exists=True),
-              help="Path to Freemarker template file")
+@click.option(
+    "--file", "template_file", required=True, type=click.Path(exists=True), help="Path to Freemarker template file"
+)
 @click.option("--workspace", "-w", default=None, help="Workspace name")
 @click.option("--store", "-s", default=None, help="Store name")
 @click.option("--featuretype", "-f", default=None, help="Feature type name")
@@ -1505,7 +1517,7 @@ def template_create(ctx, name, template_file, workspace, store, featuretype):
     """Create/upload a Freemarker template."""
     try:
         client = _get_client(ctx)
-        with open(template_file, "r") as f:
+        with open(template_file) as f:
             body = f.read()
         result = client.create_template(name, body, workspace=workspace, store=store, featuretype=featuretype)
         _output(ctx, result, lambda d: click.echo(f"Template '{name}' created."))
@@ -1531,6 +1543,7 @@ def template_delete(ctx, name, workspace, store, featuretype):
 
 # ── Security Commands ────────────────────────────────────────────────────
 
+
 @cli.group()
 @click.pass_context
 def security(ctx):
@@ -1539,6 +1552,7 @@ def security(ctx):
 
 
 # ── Security: User ──
+
 
 @security.group("user")
 @click.pass_context
@@ -1627,6 +1641,7 @@ def security_user_delete(ctx, username, service):
 
 # ── Security: Group ──
 
+
 @security.group("group")
 @click.pass_context
 def security_group(ctx):
@@ -1676,6 +1691,7 @@ def security_group_delete(ctx, name, service):
 
 
 # ── Security: Role ──
+
 
 @security.group("role")
 @click.pass_context
@@ -1787,6 +1803,7 @@ def security_role_remove_group(ctx, role, group_name):
 
 # ── Security: Rules ──
 
+
 @security.group("rules")
 @click.pass_context
 def security_rules(ctx):
@@ -1850,6 +1867,7 @@ def security_rules_rest(ctx, rules_json):
 
 # ── Security: Catalog Mode ──
 
+
 @security.group("catalog-mode")
 @click.pass_context
 def security_catalog_mode(ctx):
@@ -1883,6 +1901,7 @@ def security_catalog_mode_set(ctx, mode):
 
 
 # ── Security: Master Password ──
+
 
 @security.group("master-password")
 @click.pass_context
@@ -1919,6 +1938,7 @@ def security_master_password_update(ctx, old_password, new_password):
 
 # ── Security: Auth Filters ──
 
+
 @security.group("auth-filters")
 @click.pass_context
 def security_auth_filters(ctx):
@@ -1953,6 +1973,7 @@ def security_auth_filters_get(ctx, name):
 
 # ── Security: Auth Providers ──
 
+
 @security.group("auth-providers")
 @click.pass_context
 def security_auth_providers(ctx):
@@ -1986,6 +2007,7 @@ def security_auth_providers_get(ctx, name):
 
 
 # ── Service Commands ─────────────────────────────────────────────────────
+
 
 @cli.group()
 @click.pass_context
@@ -2033,6 +2055,7 @@ def service_update(ctx, service_name, workspace, enabled, title, abstract_text):
 
 
 # ── Settings Commands ────────────────────────────────────────────────────
+
 
 @cli.group()
 @click.pass_context
@@ -2238,6 +2261,7 @@ def settings_local_delete(ctx, workspace_name):
 
 # ── GeoWebCache (GWC) Commands ───────────────────────────────────────────
 
+
 @cli.group()
 @click.pass_context
 def gwc(ctx):
@@ -2246,6 +2270,7 @@ def gwc(ctx):
 
 
 # ── GWC: Layer ──
+
 
 @gwc.group("layer")
 @click.pass_context
@@ -2309,10 +2334,12 @@ def gwc_layer_delete(ctx, name):
 
 # ── GWC: Seed ──
 
+
 @gwc.command("seed")
 @click.argument("layer_name")
-@click.option("--type", "seed_type", type=click.Choice(["seed", "reseed", "truncate"]),
-              default="seed", help="Seed operation type")
+@click.option(
+    "--type", "seed_type", type=click.Choice(["seed", "reseed", "truncate"]), default="seed", help="Seed operation type"
+)
 @click.option("--gridset", default="EPSG:4326", help="Grid set name")
 @click.option("--zoom-start", type=int, default=0, help="Start zoom level")
 @click.option("--zoom-stop", type=int, default=10, help="Stop zoom level")
@@ -2335,8 +2362,7 @@ def gwc_seed_cmd(ctx, layer_name, seed_type, gridset, zoom_start, zoom_stop, til
             }
         }
         result = client.gwc_seed(layer_name, seed_request)
-        _output(ctx, result, lambda d: click.echo(
-            f"Seed task ({seed_type}) started for layer '{layer_name}'."))
+        _output(ctx, result, lambda d: click.echo(f"Seed task ({seed_type}) started for layer '{layer_name}'."))
     except GeoServerError as e:
         _handle_error(ctx, e)
 
@@ -2381,6 +2407,7 @@ def gwc_mass_truncate_cmd(ctx, layer_name):
 
 
 # ── GWC: Grid Set ──
+
 
 @gwc.group("gridset")
 @click.pass_context
@@ -2444,6 +2471,7 @@ def gwc_gridset_delete(ctx, name):
 
 # ── GWC: Blob Store ──
 
+
 @gwc.group("blobstore")
 @click.pass_context
 def gwc_blobstore_group(ctx):
@@ -2506,6 +2534,7 @@ def gwc_blobstore_delete(ctx, name):
 
 # ── GWC: Disk Quota ──
 
+
 @gwc.group("diskquota")
 @click.pass_context
 def gwc_diskquota_group(ctx):
@@ -2540,6 +2569,7 @@ def gwc_diskquota_update(ctx, config_json):
 
 
 # ── GWC: Global ──
+
 
 @gwc.group("global")
 @click.pass_context
@@ -2576,6 +2606,7 @@ def gwc_global_update(ctx, config_json):
 
 # ── Export Commands ──────────────────────────────────────────────────────
 
+
 @cli.group()
 @click.pass_context
 def export(ctx):
@@ -2597,11 +2628,12 @@ def export_map_cmd(ctx, layers, output, bbox, width, height, srs, fmt, styles):
     """Export a map image via WMS GetMap."""
     try:
         from cli_anything.geoserver.core.export import export_map
+
         client = _get_client(ctx)
-        result = export_map(client, layers, output, bbox=bbox, width=width,
-                           height=height, srs=srs, format=fmt, styles=styles)
-        _output(ctx, result, lambda d: click.echo(
-            f"Map exported: {d['output']} ({d['file_size']:,} bytes)"))
+        result = export_map(
+            client, layers, output, bbox=bbox, width=width, height=height, srs=srs, format=fmt, styles=styles
+        )
+        _output(ctx, result, lambda d: click.echo(f"Map exported: {d['output']} ({d['file_size']:,} bytes)"))
     except GeoServerError as e:
         _handle_error(ctx, e)
 
@@ -2619,12 +2651,12 @@ def export_features_cmd(ctx, typenames, output, fmt, max_features, cql_filter, b
     """Export features via WFS GetFeature."""
     try:
         from cli_anything.geoserver.core.export import export_features
+
         client = _get_client(ctx)
-        result = export_features(client, typenames, output, format=fmt,
-                                max_features=max_features, cql_filter=cql_filter,
-                                bbox=bbox, srs=srs)
-        _output(ctx, result, lambda d: click.echo(
-            f"Features exported: {d['output']} ({d['file_size']:,} bytes)"))
+        result = export_features(
+            client, typenames, output, format=fmt, max_features=max_features, cql_filter=cql_filter, bbox=bbox, srs=srs
+        )
+        _output(ctx, result, lambda d: click.echo(f"Features exported: {d['output']} ({d['file_size']:,} bytes)"))
     except GeoServerError as e:
         _handle_error(ctx, e)
 
@@ -2640,11 +2672,10 @@ def export_coverage_cmd(ctx, coverage_id, output, fmt, bbox, srs):
     """Export raster coverage via WCS GetCoverage."""
     try:
         from cli_anything.geoserver.core.export import export_coverage
+
         client = _get_client(ctx)
-        result = export_coverage(client, coverage_id, output, format=fmt,
-                                bbox=bbox, srs=srs)
-        _output(ctx, result, lambda d: click.echo(
-            f"Coverage exported: {d['output']} ({d['file_size']:,} bytes)"))
+        result = export_coverage(client, coverage_id, output, format=fmt, bbox=bbox, srs=srs)
+        _output(ctx, result, lambda d: click.echo(f"Coverage exported: {d['output']} ({d['file_size']:,} bytes)"))
     except GeoServerError as e:
         _handle_error(ctx, e)
 
@@ -2686,15 +2717,21 @@ def export_capabilities_cmd(ctx, service_name, output, svc_version):
 @click.option("--info-format", default="application/json", help="Info format")
 @click.option("--feature-count", type=int, default=10, help="Max features to return")
 @click.pass_context
-def export_featureinfo_cmd(ctx, layers, output, bbox, width, height, x, y,
-                           srs, info_format, feature_count):
+def export_featureinfo_cmd(ctx, layers, output, bbox, width, height, x, y, srs, info_format, feature_count):
     """Get feature info via WMS GetFeatureInfo."""
     try:
         client = _get_client(ctx)
         data = client.wms_getfeatureinfo(
-            layers=layers, bbox=bbox, width=width, height=height,
-            x=x, y=y, srs=srs, info_format=info_format,
-            feature_count=feature_count)
+            layers=layers,
+            bbox=bbox,
+            width=width,
+            height=height,
+            x=x,
+            y=y,
+            srs=srs,
+            info_format=info_format,
+            feature_count=feature_count,
+        )
         if isinstance(data, dict):
             with open(output, "w") as f:
                 json_mod.dump(data, f, indent=2)
@@ -2703,8 +2740,7 @@ def export_featureinfo_cmd(ctx, layers, output, bbox, width, height, x, y,
                 f.write(data)
         file_size = os.path.getsize(output)
         result = {"output": output, "file_size": file_size}
-        _output(ctx, result, lambda d: click.echo(
-            f"Feature info exported: {d['output']} ({d['file_size']:,} bytes)"))
+        _output(ctx, result, lambda d: click.echo(f"Feature info exported: {d['output']} ({d['file_size']:,} bytes)"))
     except GeoServerError as e:
         _handle_error(ctx, e)
 
@@ -2721,14 +2757,12 @@ def export_legendgraphic_cmd(ctx, layer_name, output, fmt, width, height, style)
     """Get legend graphic via WMS GetLegendGraphic."""
     try:
         client = _get_client(ctx)
-        data = client.wms_getlegendgraphic(
-            layer=layer_name, format=fmt, width=width, height=height, style=style)
+        data = client.wms_getlegendgraphic(layer=layer_name, format=fmt, width=width, height=height, style=style)
         with open(output, "wb") as f:
             f.write(data)
         file_size = os.path.getsize(output)
         result = {"output": output, "file_size": file_size}
-        _output(ctx, result, lambda d: click.echo(
-            f"Legend graphic exported: {d['output']} ({d['file_size']:,} bytes)"))
+        _output(ctx, result, lambda d: click.echo(f"Legend graphic exported: {d['output']} ({d['file_size']:,} bytes)"))
     except GeoServerError as e:
         _handle_error(ctx, e)
 
@@ -2781,6 +2815,7 @@ def export_describe_coverage_cmd(ctx, coverage_id, output):
 
 # ── Shared display helpers ───────────────────────────────────────────────
 
+
 def _print_detail(data):
     """Print a dict as key-value pairs."""
     if isinstance(data, dict):
@@ -2808,6 +2843,7 @@ def _print_list_names(items):
 
 
 # ── Entry point ──────────────────────────────────────────────────────────
+
 
 def main():
     cli(auto_envvar_prefix="GEOSERVER")

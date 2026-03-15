@@ -1,12 +1,10 @@
 """Project/session state for GeoServer CLI."""
 
 import json
-import os
 import time
 
 
-def create_session(url="http://localhost:8080/geoserver", username="admin",
-                   password="geoserver", workspace=None):
+def create_session(url="http://localhost:8080/geoserver", username="admin", password="geoserver", workspace=None):
     """Create a new CLI session state."""
     return {
         "version": "1.0.0",
@@ -30,7 +28,7 @@ def save_session(session, path):
 
 def load_session(path):
     """Load session state from JSON file."""
-    with open(path, "r") as f:
+    with open(path) as f:
         return json.load(f)
 
 
@@ -48,8 +46,10 @@ def session_info(session):
 
 def add_history(session, command):
     """Add a command to session history."""
-    session.setdefault("history", []).append({
-        "command": command,
-        "timestamp": time.time(),
-    })
+    session.setdefault("history", []).append(
+        {
+            "command": command,
+            "timestamp": time.time(),
+        }
+    )
     session["modified"] = time.time()

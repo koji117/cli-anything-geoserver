@@ -1,11 +1,20 @@
 """Export module — download maps, features, and coverages from GeoServer."""
 
 import os
-from cli_anything.geoserver.utils.geoserver_backend import GeoServerClient, GeoServerError
 
 
-def export_map(client, layers, output_path, bbox=None, width=800, height=600,
-               srs="EPSG:4326", format="image/png", styles="", transparent=True):
+def export_map(
+    client,
+    layers,
+    output_path,
+    bbox=None,
+    width=800,
+    height=600,
+    srs="EPSG:4326",
+    format="image/png",
+    styles="",
+    transparent=True,
+):
     """Export a map image via WMS GetMap.
 
     Args:
@@ -27,8 +36,14 @@ def export_map(client, layers, output_path, bbox=None, width=800, height=600,
         bbox = "-180,-90,180,90"
 
     data = client.wms_getmap(
-        layers=layers, bbox=bbox, width=width, height=height,
-        srs=srs, format=format, styles=styles, transparent=transparent,
+        layers=layers,
+        bbox=bbox,
+        width=width,
+        height=height,
+        srs=srs,
+        format=format,
+        styles=styles,
+        transparent=transparent,
     )
 
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
@@ -48,8 +63,16 @@ def export_map(client, layers, output_path, bbox=None, width=800, height=600,
     }
 
 
-def export_features(client, typenames, output_path, format="application/json",
-                    max_features=None, cql_filter=None, bbox=None, srs="EPSG:4326"):
+def export_features(
+    client,
+    typenames,
+    output_path,
+    format="application/json",
+    max_features=None,
+    cql_filter=None,
+    bbox=None,
+    srs="EPSG:4326",
+):
     """Export features via WFS GetFeature.
 
     Args:
@@ -66,13 +89,18 @@ def export_features(client, typenames, output_path, format="application/json",
         dict with output path and metadata
     """
     data = client.wfs_getfeature(
-        typenames=typenames, format=format, max_features=max_features,
-        cql_filter=cql_filter, bbox=bbox, srs=srs,
+        typenames=typenames,
+        format=format,
+        max_features=max_features,
+        cql_filter=cql_filter,
+        bbox=bbox,
+        srs=srs,
     )
 
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)
     if isinstance(data, dict):
         import json
+
         with open(output_path, "w") as f:
             json.dump(data, f, indent=2)
     elif isinstance(data, bytes):
@@ -97,8 +125,7 @@ def export_features(client, typenames, output_path, format="application/json",
     return result
 
 
-def export_coverage(client, coverage_id, output_path, format="image/tiff",
-                    bbox=None, srs="EPSG:4326"):
+def export_coverage(client, coverage_id, output_path, format="image/tiff", bbox=None, srs="EPSG:4326"):
     """Export raster data via WCS GetCoverage.
 
     Args:
@@ -113,7 +140,10 @@ def export_coverage(client, coverage_id, output_path, format="image/tiff",
         dict with output path and metadata
     """
     data = client.wcs_getcoverage(
-        coverage_id=coverage_id, format=format, bbox=bbox, srs=srs,
+        coverage_id=coverage_id,
+        format=format,
+        bbox=bbox,
+        srs=srs,
     )
 
     os.makedirs(os.path.dirname(os.path.abspath(output_path)), exist_ok=True)

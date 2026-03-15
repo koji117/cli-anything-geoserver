@@ -15,16 +15,15 @@ import os
 import subprocess
 import sys
 import tempfile
-import time
 import uuid
 
 import pytest
 
+from cli_anything.geoserver.core.export import export_features, export_map
 from cli_anything.geoserver.utils.geoserver_backend import GeoServerClient, GeoServerError
-from cli_anything.geoserver.core.export import export_map, export_features
-
 
 # ── Fixtures ─────────────────────────────────────────────────────────────
+
 
 @pytest.fixture(scope="session")
 def client():
@@ -60,6 +59,7 @@ def unique_name():
 
 # ── Server Tests ─────────────────────────────────────────────────────────
 
+
 class TestServer:
     def test_server_version(self, client):
         data = client.server_version()
@@ -75,6 +75,7 @@ class TestServer:
 
 
 # ── Workspace CRUD ───────────────────────────────────────────────────────
+
 
 class TestWorkspaceCRUD:
     def test_list_workspaces(self, client):
@@ -102,6 +103,7 @@ class TestWorkspaceCRUD:
 
 # ── Store Operations ─────────────────────────────────────────────────────
 
+
 class TestStoreOperations:
     def test_list_datastores(self, client):
         """List datastores in any available workspace."""
@@ -124,6 +126,7 @@ class TestStoreOperations:
 
 # ── Layer Operations ─────────────────────────────────────────────────────
 
+
 class TestLayerOperations:
     def test_list_layers(self, client):
         layers = client.list_layers()
@@ -141,6 +144,7 @@ class TestLayerOperations:
 
 
 # ── Style Operations ─────────────────────────────────────────────────────
+
 
 class TestStyleOperations:
     def test_list_styles(self, client):
@@ -162,6 +166,7 @@ class TestStyleOperations:
 
 # ── Service Settings ─────────────────────────────────────────────────────
 
+
 class TestServiceSettings:
     def test_wms_settings(self, client):
         data = client.get_service_settings("wms")
@@ -177,6 +182,7 @@ class TestServiceSettings:
 
 # ── Export Tests ─────────────────────────────────────────────────────────
 
+
 class TestExportMap:
     def test_wms_getmap_png(self, client, tmp_dir):
         """Export a map image using WMS GetMap — requires at least one published layer."""
@@ -188,8 +194,12 @@ class TestExportMap:
         out_path = os.path.join(tmp_dir, "map.png")
 
         result = export_map(
-            client, layer_name, out_path,
-            bbox="-180,-90,180,90", width=256, height=256,
+            client,
+            layer_name,
+            out_path,
+            bbox="-180,-90,180,90",
+            width=256,
+            height=256,
             format="image/png",
         )
 
@@ -216,8 +226,11 @@ class TestExportFeatures:
 
         try:
             result = export_features(
-                client, layer_name, out_path,
-                format="application/json", max_features=10,
+                client,
+                layer_name,
+                out_path,
+                format="application/json",
+                max_features=10,
             )
             assert os.path.exists(result["output"])
             assert result["file_size"] > 0
@@ -234,6 +247,7 @@ class TestExportFeatures:
 
 
 # ── Full Workflow Tests ──────────────────────────────────────────────────
+
 
 class TestFullWorkflow:
     def test_workspace_lifecycle(self, client, unique_name):
@@ -281,9 +295,11 @@ class TestFullWorkflow:
 
 # ── CLI Subprocess E2E ───────────────────────────────────────────────────
 
+
 def _resolve_cli(name):
     """Resolve installed CLI command; falls back to python -m for dev."""
     import shutil
+
     force = os.environ.get("CLI_ANYTHING_FORCE_INSTALLED", "").strip() == "1"
     path = shutil.which(name)
     if path:
@@ -302,7 +318,8 @@ class TestCLISubprocessE2E:
     def _run(self, args, check=True):
         return subprocess.run(
             self.CLI_BASE + args,
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
             check=check,
         )
 
@@ -328,7 +345,7 @@ class TestCLISubprocessE2E:
         if result.returncode == 0:
             data = json.loads(result.stdout)
             assert "about" in data
-            print(f"\n  Subprocess server status: OK")
+            print("\n  Subprocess server status: OK")
         else:
             assert "Cannot connect" in result.stderr or "error" in result.stderr.lower()
 
@@ -347,11 +364,21 @@ class TestCLISubprocessE2E:
             layer_name = layers[0]["name"] if isinstance(layers[0], dict) else layers[0]
             out_path = os.path.join(tmpdir, "sub_map.png")
 
-            result = self._run([
-                "export", "map", layer_name, out_path,
-                "--bbox", "-180,-90,180,90",
-                "--width", "256", "--height", "256",
-            ], check=False)
+            result = self._run(
+                [
+                    "export",
+                    "map",
+                    layer_name,
+                    out_path,
+                    "--bbox",
+                    "-180,-90,180,90",
+                    "--width",
+                    "256",
+                    "--height",
+                    "256",
+                ],
+                check=False,
+            )
 
             if result.returncode == 0:
                 assert os.path.exists(out_path)

@@ -2,25 +2,30 @@
 
 import json
 import os
-import sys
 import subprocess
+import sys
 import tempfile
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 from click.testing import CliRunner
 
-from cli_anything.geoserver.core.session import Session
 from cli_anything.geoserver.core.project import (
-    create_session, save_session, load_session, session_info, add_history,
+    add_history,
+    create_session,
+    load_session,
+    save_session,
+    session_info,
 )
-from cli_anything.geoserver.utils.geoserver_backend import (
-    GeoServerClient, GeoServerError,
-)
+from cli_anything.geoserver.core.session import Session
 from cli_anything.geoserver.geoserver_cli import cli
-
+from cli_anything.geoserver.utils.geoserver_backend import (
+    GeoServerClient,
+    GeoServerError,
+)
 
 # ── Session (core/session.py) ────────────────────────────────────────────
+
 
 class TestSession:
     def test_create_default(self):
@@ -82,6 +87,7 @@ class TestSession:
 
 # ── Project (core/project.py) ────────────────────────────────────────────
 
+
 class TestProject:
     def test_create_session(self):
         sess = create_session()
@@ -117,6 +123,7 @@ class TestProject:
 
 # ── GeoServerClient — core methods ───────────────────────────────────────
 
+
 class TestGeoServerClient:
     def test_url_construction(self):
         client = GeoServerClient(url="http://myhost:9090/geoserver")
@@ -148,6 +155,7 @@ class TestGeoServerClient:
 
 
 # ── GeoServerClient — list_helper for all resource types ─────────────────
+
 
 class TestListHelper:
     """Test _list_helper for various collection types."""
@@ -222,6 +230,7 @@ class TestListHelper:
 
 # ── GeoServerClient — CRUD operations ────────────────────────────────────
 
+
 class TestCRUDOperations:
     @patch("cli_anything.geoserver.utils.geoserver_backend.GeoServerClient._request")
     def test_create_namespace(self, mock_req):
@@ -270,7 +279,9 @@ class TestCRUDOperations:
     def test_create_wmsstore(self, mock_req):
         mock_req.return_value = MagicMock()
         client = GeoServerClient()
-        result = client.create_wmsstore("topp", "remote", "http://example.com/wms?service=WMS&version=1.1.1&request=GetCapabilities")
+        result = client.create_wmsstore(
+            "topp", "remote", "http://example.com/wms?service=WMS&version=1.1.1&request=GetCapabilities"
+        )
         assert result["created"] is True
 
     @patch("cli_anything.geoserver.utils.geoserver_backend.GeoServerClient._request")
@@ -296,6 +307,7 @@ class TestCRUDOperations:
 
 
 # ── GeoServerClient — Security ───────────────────────────────────────────
+
 
 class TestSecurityMethods:
     @patch("cli_anything.geoserver.utils.geoserver_backend.GeoServerClient._request")
@@ -345,6 +357,7 @@ class TestSecurityMethods:
 
 # ── GeoServerClient — GWC ────────────────────────────────────────────────
 
+
 class TestGWCMethods:
     @patch("cli_anything.geoserver.utils.geoserver_backend.GeoServerClient._gwc_request")
     def test_gwc_list_layers(self, mock_req):
@@ -376,6 +389,7 @@ class TestGWCMethods:
 
 
 # ── GeoServerClient — OGC extended ───────────────────────────────────────
+
 
 class TestOGCExtended:
     @patch("cli_anything.geoserver.utils.geoserver_backend.GeoServerClient._ogc_request")
@@ -430,6 +444,7 @@ class TestOGCExtended:
 
 # ── GeoServerClient — Resources & Templates ─────────────────────────────
 
+
 class TestResourcesTemplates:
     @patch("cli_anything.geoserver.utils.geoserver_backend.GeoServerClient._request")
     def test_list_resource_directory(self, mock_req):
@@ -463,6 +478,7 @@ class TestResourcesTemplates:
 
 
 # ── GeoServerClient — Settings ───────────────────────────────────────────
+
 
 class TestSettingsMethods:
     @patch("cli_anything.geoserver.utils.geoserver_backend.GeoServerClient._request")
@@ -502,10 +518,11 @@ class TestSettingsMethods:
 
 # ── Export (core/export.py) ──────────────────────────────────────────────
 
+
 class TestExport:
-    @patch("cli_anything.geoserver.core.export.GeoServerClient")
-    def test_export_map(self, MockClient):
+    def test_export_map(self):
         from cli_anything.geoserver.core.export import export_map
+
         mock_client = MagicMock()
         mock_client.wms_getmap.return_value = b"\x89PNG\r\n\x1a\n" + b"\x00" * 100
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -517,9 +534,9 @@ class TestExport:
             with open(out, "rb") as f:
                 assert f.read(4) == b"\x89PNG"
 
-    @patch("cli_anything.geoserver.core.export.GeoServerClient")
-    def test_export_features(self, MockClient):
+    def test_export_features(self):
         from cli_anything.geoserver.core.export import export_features
+
         mock_client = MagicMock()
         mock_client.wfs_getfeature.return_value = {
             "type": "FeatureCollection",
@@ -534,9 +551,9 @@ class TestExport:
                 data = json.load(f)
             assert data["type"] == "FeatureCollection"
 
-    @patch("cli_anything.geoserver.core.export.GeoServerClient")
-    def test_export_coverage(self, MockClient):
+    def test_export_coverage(self):
         from cli_anything.geoserver.core.export import export_coverage
+
         mock_client = MagicMock()
         mock_client.wcs_getcoverage.return_value = b"II\x2a\x00" + b"\x00" * 100
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -549,6 +566,7 @@ class TestExport:
 
 
 # ── CLI — all command groups help ────────────────────────────────────────
+
 
 class TestCLI:
     def test_help(self):
@@ -685,9 +703,11 @@ class TestCLI:
 
 # ── CLI Subprocess ───────────────────────────────────────────────────────
 
+
 def _resolve_cli(name):
     """Resolve installed CLI command; falls back to python -m for dev."""
     import shutil
+
     force = os.environ.get("CLI_ANYTHING_FORCE_INSTALLED", "").strip() == "1"
     path = shutil.which(name)
     if path:
@@ -706,7 +726,8 @@ class TestCLISubprocess:
     def _run(self, args, check=True):
         return subprocess.run(
             self.CLI_BASE + args,
-            capture_output=True, text=True,
+            capture_output=True,
+            text=True,
             check=check,
         )
 
@@ -732,10 +753,24 @@ class TestCLISubprocess:
     def test_all_command_groups_help(self):
         """Verify all 18 command groups respond to --help via subprocess."""
         groups = [
-            "server", "workspace", "namespace", "store", "layer", "style",
-            "layergroup", "service", "export", "wmsstore", "wmtsstore",
-            "wmslayer", "wmtslayer", "resource", "template", "security",
-            "gwc", "settings",
+            "server",
+            "workspace",
+            "namespace",
+            "store",
+            "layer",
+            "style",
+            "layergroup",
+            "service",
+            "export",
+            "wmsstore",
+            "wmtsstore",
+            "wmslayer",
+            "wmtslayer",
+            "resource",
+            "template",
+            "security",
+            "gwc",
+            "settings",
         ]
         for group in groups:
             result = self._run([group, "--help"])
