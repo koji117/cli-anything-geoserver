@@ -216,8 +216,8 @@ Workspace (container)
 
 ```
 agent-harness/
-├── GEOSERVER.md                          # This SOP document
-├── setup.py                              # PyPI package config
+├── README.md                             # This SOP document
+├── pyproject.toml                        # uv/PyPI package config
 └── cli_anything/                         # Namespace pkg (NO __init__.py)
     └── geoserver/                        # Sub-package
         ├── __init__.py                   # Version: 1.0.0

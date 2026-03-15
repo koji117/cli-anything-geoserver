@@ -29,7 +29,7 @@ Alternative installations:
 ### Python Dependencies
 
 ```bash
-pip install -e .
+uv sync
 ```
 
 Requires: Python 3.10+, click, prompt-toolkit, requests
@@ -38,11 +38,14 @@ Requires: Python 3.10+, click, prompt-toolkit, requests
 
 ```bash
 cd agent-harness
-pip install -e .
+uv sync
 
 # Verify
+uv run cli-anything-geoserver --help
+
+# Or install globally
+uv pip install -e .
 which cli-anything-geoserver
-cli-anything-geoserver --help
 ```
 
 ## Configuration
@@ -590,13 +593,12 @@ cli-anything-geoserver
 cd agent-harness
 
 # Unit tests (no GeoServer needed)
-.venv/bin/pytest cli_anything/geoserver/tests/test_core.py -v
+uv run pytest -v
 
 # E2E tests (requires running GeoServer)
 docker run -d --name geoserver -p 8080:8080 docker.io/kartoza/geoserver:latest
-.venv/bin/pytest cli_anything/geoserver/tests/test_full_e2e.py -v -s
+uv run pytest cli_anything/geoserver/tests/test_full_e2e.py -v -s
 
 # Force-installed subprocess tests
-PATH=".venv/bin:$PATH" CLI_ANYTHING_FORCE_INSTALLED=1 \
-  .venv/bin/pytest cli_anything/geoserver/tests/test_core.py -v -s
+CLI_ANYTHING_FORCE_INSTALLED=1 uv run pytest -v -s
 ```
