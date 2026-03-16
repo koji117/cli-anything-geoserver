@@ -229,10 +229,224 @@ agent-harness/
         │   ├── session.py                # OOP session with undo
         │   └── export.py                 # WMS/WFS/WCS export helpers
         ├── utils/
-        │   ├── geoserver_backend.py      # REST API client (1078 lines, 120+ methods)
+        │   ├── geoserver_backend.py      # REST API client (120+ methods)
         │   └── repl_skin.py              # Unified REPL skin
         └── tests/
             ├── TEST.md                   # Test plan + results
             ├── test_core.py              # 84 unit tests (mocked, no server needed)
             └── test_full_e2e.py          # ~20 E2E tests (requires GeoServer)
+```
+
+## API Parameter Reference
+
+All create/update methods accept explicit keyword parameters derived from the GeoServer REST API. Parameters default to `None` (omitted from the request). Additional unlisted fields can be passed via `**kwargs`.
+
+### DataStore Connection Parameters
+
+Used by `create_datastore()`. Common configurations:
+
+| Data Source | Key Parameters |
+|-------------|----------------|
+| PostGIS | `host`, `port`, `database`, `schema`, `user`, `passwd`, `dbtype="postgis"` |
+| Shapefile Directory | `url="file:data/shapefiles"`, `dbtype="shapefile"` |
+| GeoPackage | `database="file:data/my.gpkg"`, `dbtype="geopkg"` |
+| Oracle | `host`, `port`, `database`, `schema`, `user`, `passwd`, `dbtype="oracle"` |
+| SQL Server | `host`, `port`, `database`, `schema`, `user`, `passwd`, `dbtype="sqlserver"` |
+
+### CoverageStore Types
+
+Used by `create_coveragestore(store_type=...)`:
+
+| Type | Description |
+|------|-------------|
+| `"GeoTIFF"` | Single GeoTIFF file |
+| `"WorldImage"` | World-file referenced image (PNG/JPEG/TIFF + .pgw/.jgw/.tfw) |
+| `"ImageMosaic"` | Directory of raster tiles with index |
+| `"NetCDF"` | NetCDF scientific data format |
+| `"ImagePyramid"` | Multi-resolution raster pyramid |
+
+### Feature Type / Coverage Fields
+
+Used by `create_featuretype()`, `update_featuretype()`, `create_coverage()`, `update_coverage()`:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `title` | str | Human-readable layer title |
+| `abstract` | str | Layer description |
+| `srs` | str | Declared SRS, e.g. `"EPSG:4326"`, `"EPSG:32632"` |
+| `native_crs` | str | Native CRS (usually auto-detected) |
+| `enabled` | bool | Whether the resource is enabled |
+| `projection_policy` | str | `"FORCE_DECLARED"`, `"REPROJECT_TO_DECLARED"`, or `"NONE"` |
+| `keywords` | dict | `{"string": ["keyword1", "keyword2"]}` |
+| `advertised` | bool | Show in GetCapabilities |
+| `native_bounding_box` | dict | `{"minx": 10.0, "miny": 46.0, "maxx": 13.0, "maxy": 48.0, "crs": "EPSG:4326"}` |
+| `lat_lon_bounding_box` | dict | Geographic extent (same structure as above, always EPSG:4326) |
+
+### Layer Fields
+
+Used by `update_layer()`:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `default_style` | str/dict | Default style name or `{"name": "style_name"}` |
+| `enabled` | bool | Enable/disable the layer |
+| `queryable` | bool | Supports GetFeatureInfo |
+| `opaque` | bool | Layer is opaque (WMS) |
+| `advertised` | bool | Show in GetCapabilities |
+
+### Layer Group Fields
+
+Used by `create_layergroup()`, `update_layergroup()`:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `title` | str | Human-readable title |
+| `abstract_txt` | str | Group description |
+| `mode` | str | `"SINGLE"` (merged), `"NAMED"` (individually accessible), `"CONTAINER"`, `"EO"` |
+| `bounds` | dict | `{"minx": ..., "miny": ..., "maxx": ..., "maxy": ..., "crs": "EPSG:4326"}` |
+
+### WMS/WMTS Store Fields
+
+Used by `create_wmsstore()`, `update_wmsstore()`, `create_wmtsstore()`, `update_wmtsstore()`:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `capabilities_url` | str | GetCapabilities URL of the remote service |
+| `enabled` | bool | Enable/disable the store |
+| `max_connections` | int | Max concurrent connections (default 6) |
+| `connect_timeout` | int | Connection timeout in seconds |
+| `read_timeout` | int | Read timeout in seconds |
+| `description` | str | Human-readable description |
+
+### OGC Service Settings
+
+Used by `update_service_settings()` for WMS, WFS, WCS, WMTS:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `enabled` | bool | Enable/disable the service |
+| `title` | str | Service title (in GetCapabilities) |
+| `abstract` | str | Service description |
+| `fees` | str | Fee info (e.g. `"NONE"`) |
+| `access_constraints` | str | Access constraints (e.g. `"NONE"`) |
+| `cite_compliant` | bool | Strict OGC CITE compliance |
+| `max_features` | int | WFS: max features per response |
+
+### Global Settings
+
+Used by `update_settings()`:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `verbose` | bool | Verbose output |
+| `verbose_exceptions` | bool | Full stack traces in errors |
+| `num_decimals` | int | Decimal places in coordinates |
+| `charset` | str | Output charset (e.g. `"UTF-8"`) |
+| `proxy_base_url` | str | Proxy base URL (e.g. `"https://maps.example.com/geoserver"`) |
+
+### Contact Information
+
+Used by `update_contact()`:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `contact_person` | str | Contact person name |
+| `contact_organization` | str | Organization |
+| `contact_position` | str | Position/title |
+| `contact_email` | str | Email address |
+| `contact_phone` | str | Phone number |
+| `address` | str | Street address |
+| `address_city` | str | City |
+| `address_state` | str | State/province |
+| `address_postal_code` | str | Postal code |
+| `address_country` | str | Country |
+
+### Logging Configuration
+
+Used by `update_logging()`:
+
+| Parameter | Type | Description |
+|-----------|------|-------------|
+| `level` | str | `"DEFAULT_LOGGING.properties"`, `"PRODUCTION_LOGGING.properties"`, `"VERBOSE_LOGGING.properties"` |
+| `location` | str | Log file path, e.g. `"logs/geoserver.log"` |
+| `std_out_logging` | bool | Also log to stdout |
+
+### Security — Data Access Rules
+
+Used by `set_data_access_rules()`, `update_data_access_rules()`:
+
+```python
+{
+    "*.*.r": "*",                          # everyone can read all layers
+    "topp.*.w": "ROLE_EDITOR,ROLE_ADMIN",  # editors/admins can write topp
+    "topp.secret_layer.r": "ROLE_ADMIN",   # only admins can read secret layer
+}
+```
+
+Rule format: `"workspace.layer.accessMode"` → `"ROLE,..."` where accessMode is `r` (read), `w` (write), or `a` (admin).
+
+### GWC Seed Request Structure
+
+Used by `gwc_seed()`:
+
+```python
+{"seedRequest": {
+    "name": "topp:roads",
+    "type": "seed",           # "seed", "reseed", or "truncate"
+    "zoomStart": 0,
+    "zoomStop": 12,
+    "gridSetId": "EPSG:4326",
+    "format": "image/png",
+    "threadCount": 4,
+}}
+```
+
+### Usage Examples
+
+```python
+from cli_anything.geoserver.utils.geoserver_backend import GeoServerClient
+
+client = GeoServerClient(url="http://localhost:8080/geoserver",
+                          username="admin", password="geoserver")
+
+# Create a PostGIS data store
+client.create_datastore("my_ws", "pg_db", {
+    "host": "localhost", "port": "5432", "database": "geodata",
+    "user": "geo", "passwd": "secret", "dbtype": "postgis",
+})
+
+# Publish a feature type from the store
+client.create_featuretype("my_ws", "pg_db", "roads",
+    title="Road Network", srs="EPSG:4326",
+    projection_policy="FORCE_DECLARED")
+
+# Update layer styling
+client.update_layer("roads", default_style="line", queryable=True)
+
+# Create a layer group
+client.create_layergroup("city_map",
+    ["my_ws:roads", "my_ws:buildings"],
+    workspace="my_ws", title="City Map", mode="NAMED")
+
+# Set data access rules
+client.set_data_access_rules({
+    "my_ws.*.r": "*",
+    "my_ws.*.w": "ROLE_EDITOR,ROLE_ADMIN",
+})
+
+# Export a WMS map image
+img = client.wms_getmap("my_ws:roads", "-180,-90,180,90",
+    width=1024, height=768)
+with open("map.png", "wb") as f:
+    f.write(img)
+
+# Seed tiles for a layer
+client.gwc_seed("my_ws:roads", {
+    "seedRequest": {
+        "name": "my_ws:roads", "type": "seed",
+        "zoomStart": 0, "zoomStop": 10,
+        "gridSetId": "EPSG:4326", "format": "image/png",
+        "threadCount": 2,
+    }
+})
 ```
