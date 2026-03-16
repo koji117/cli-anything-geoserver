@@ -508,9 +508,7 @@ class GeoServerClient:
 
             client.update_coveragestore("nurc", "dem", enabled=False)
         """
-        payload = self._build_payload(
-            {"description": description, "enabled": enabled, "url": url}, kwargs
-        )
+        payload = self._build_payload({"description": description, "enabled": enabled, "url": url}, kwargs)
         self._put(f"workspaces/{workspace}/coveragestores/{name}.json", json={"coverageStore": payload})
         return {"workspace": workspace, "name": name, "updated": True}
 
@@ -560,9 +558,16 @@ class GeoServerClient:
         return self._get(f"workspaces/{workspace}/wmsstores/{name}.json").json().get("wmsStore", {})
 
     def create_wmsstore(
-        self, workspace, name, capabilities_url, *,
-        enabled=None, max_connections=None, connect_timeout=None,
-        read_timeout=None, **kwargs,
+        self,
+        workspace,
+        name,
+        capabilities_url,
+        *,
+        enabled=None,
+        max_connections=None,
+        connect_timeout=None,
+        read_timeout=None,
+        **kwargs,
     ):
         """POST /rest/workspaces/{ws}/wmsstores.json — create a cascaded WMS store.
 
@@ -586,8 +591,12 @@ class GeoServerClient:
                 max_connections=10)
         """
         extras = self._build_payload(
-            {"enabled": enabled, "maxConnections": max_connections,
-             "connectTimeout": connect_timeout, "readTimeout": read_timeout},
+            {
+                "enabled": enabled,
+                "maxConnections": max_connections,
+                "connectTimeout": connect_timeout,
+                "readTimeout": read_timeout,
+            },
             kwargs,
         )
         payload = {
@@ -604,9 +613,17 @@ class GeoServerClient:
         return {"workspace": workspace, "name": name, "created": True}
 
     def update_wmsstore(
-        self, workspace, name, *,
-        capabilities_url=None, enabled=None, max_connections=None,
-        connect_timeout=None, read_timeout=None, description=None, **kwargs,
+        self,
+        workspace,
+        name,
+        *,
+        capabilities_url=None,
+        enabled=None,
+        max_connections=None,
+        connect_timeout=None,
+        read_timeout=None,
+        description=None,
+        **kwargs,
     ):
         """PUT /rest/workspaces/{ws}/wmsstores/{name}.json — update a WMS store.
 
@@ -626,9 +643,14 @@ class GeoServerClient:
             client.update_wmsstore("topp", "remote", enabled=False)
         """
         payload = self._build_payload(
-            {"capabilitiesURL": capabilities_url, "enabled": enabled,
-             "maxConnections": max_connections, "connectTimeout": connect_timeout,
-             "readTimeout": read_timeout, "description": description},
+            {
+                "capabilitiesURL": capabilities_url,
+                "enabled": enabled,
+                "maxConnections": max_connections,
+                "connectTimeout": connect_timeout,
+                "readTimeout": read_timeout,
+                "description": description,
+            },
             kwargs,
         )
         self._put(f"workspaces/{workspace}/wmsstores/{name}.json", json={"wmsStore": payload})
@@ -680,9 +702,16 @@ class GeoServerClient:
         return self._get(f"workspaces/{workspace}/wmtsstores/{name}.json").json().get("wmtsStore", {})
 
     def create_wmtsstore(
-        self, workspace, name, capabilities_url, *,
-        enabled=None, max_connections=None, connect_timeout=None,
-        read_timeout=None, **kwargs,
+        self,
+        workspace,
+        name,
+        capabilities_url,
+        *,
+        enabled=None,
+        max_connections=None,
+        connect_timeout=None,
+        read_timeout=None,
+        **kwargs,
     ):
         """POST /rest/workspaces/{ws}/wmtsstores.json — create a cascaded WMTS store.
 
@@ -704,8 +733,12 @@ class GeoServerClient:
                 "https://tiles.example.com/wmts?request=GetCapabilities")
         """
         extras = self._build_payload(
-            {"enabled": enabled, "maxConnections": max_connections,
-             "connectTimeout": connect_timeout, "readTimeout": read_timeout},
+            {
+                "enabled": enabled,
+                "maxConnections": max_connections,
+                "connectTimeout": connect_timeout,
+                "readTimeout": read_timeout,
+            },
             kwargs,
         )
         payload = {
@@ -722,9 +755,17 @@ class GeoServerClient:
         return {"workspace": workspace, "name": name, "created": True}
 
     def update_wmtsstore(
-        self, workspace, name, *,
-        capabilities_url=None, enabled=None, max_connections=None,
-        connect_timeout=None, read_timeout=None, description=None, **kwargs,
+        self,
+        workspace,
+        name,
+        *,
+        capabilities_url=None,
+        enabled=None,
+        max_connections=None,
+        connect_timeout=None,
+        read_timeout=None,
+        description=None,
+        **kwargs,
     ):
         """PUT /rest/workspaces/{ws}/wmtsstores/{name}.json — update a WMTS store.
 
@@ -744,9 +785,14 @@ class GeoServerClient:
             client.update_wmtsstore("topp", "osm_tiles", enabled=False)
         """
         payload = self._build_payload(
-            {"capabilitiesURL": capabilities_url, "enabled": enabled,
-             "maxConnections": max_connections, "connectTimeout": connect_timeout,
-             "readTimeout": read_timeout, "description": description},
+            {
+                "capabilitiesURL": capabilities_url,
+                "enabled": enabled,
+                "maxConnections": max_connections,
+                "connectTimeout": connect_timeout,
+                "readTimeout": read_timeout,
+                "description": description,
+            },
             kwargs,
         )
         self._put(f"workspaces/{workspace}/wmtsstores/{name}.json", json={"wmtsStore": payload})
@@ -816,10 +862,20 @@ class GeoServerClient:
         )
 
     def create_featuretype(
-        self, workspace, store, name, *,
-        title=None, abstract=None, srs=None, native_crs=None,
-        enabled=None, projection_policy=None, keywords=None,
-        native_bounding_box=None, lat_lon_bounding_box=None,
+        self,
+        workspace,
+        store,
+        name,
+        *,
+        title=None,
+        abstract=None,
+        srs=None,
+        native_crs=None,
+        enabled=None,
+        projection_policy=None,
+        keywords=None,
+        native_bounding_box=None,
+        lat_lon_bounding_box=None,
         **kwargs,
     ):
         """POST /rest/.../featuretypes.json — publish a feature type from a data store.
@@ -858,11 +914,17 @@ class GeoServerClient:
                 projection_policy="REPROJECT_TO_DECLARED")
         """
         explicit = self._build_payload(
-            {"title": title, "abstract": abstract, "srs": srs,
-             "nativeCRS": native_crs, "enabled": enabled,
-             "projectionPolicy": projection_policy, "keywords": keywords,
-             "nativeBoundingBox": native_bounding_box,
-             "latLonBoundingBox": lat_lon_bounding_box},
+            {
+                "title": title,
+                "abstract": abstract,
+                "srs": srs,
+                "nativeCRS": native_crs,
+                "enabled": enabled,
+                "projectionPolicy": projection_policy,
+                "keywords": keywords,
+                "nativeBoundingBox": native_bounding_box,
+                "latLonBoundingBox": lat_lon_bounding_box,
+            },
             kwargs,
         )
         self._post(
@@ -872,10 +934,20 @@ class GeoServerClient:
         return {"workspace": workspace, "store": store, "name": name, "created": True}
 
     def update_featuretype(
-        self, workspace, store, name, *,
-        title=None, abstract=None, srs=None, enabled=None,
-        projection_policy=None, keywords=None, advertised=None,
-        native_bounding_box=None, lat_lon_bounding_box=None,
+        self,
+        workspace,
+        store,
+        name,
+        *,
+        title=None,
+        abstract=None,
+        srs=None,
+        enabled=None,
+        projection_policy=None,
+        keywords=None,
+        advertised=None,
+        native_bounding_box=None,
+        lat_lon_bounding_box=None,
         **kwargs,
     ):
         """PUT /rest/.../featuretypes/{name}.json — update a feature type.
@@ -903,11 +975,17 @@ class GeoServerClient:
                 title="Updated Roads", abstract="Road network 2024")
         """
         payload = self._build_payload(
-            {"title": title, "abstract": abstract, "srs": srs,
-             "enabled": enabled, "projectionPolicy": projection_policy,
-             "keywords": keywords, "advertised": advertised,
-             "nativeBoundingBox": native_bounding_box,
-             "latLonBoundingBox": lat_lon_bounding_box},
+            {
+                "title": title,
+                "abstract": abstract,
+                "srs": srs,
+                "enabled": enabled,
+                "projectionPolicy": projection_policy,
+                "keywords": keywords,
+                "advertised": advertised,
+                "nativeBoundingBox": native_bounding_box,
+                "latLonBoundingBox": lat_lon_bounding_box,
+            },
             kwargs,
         )
         self._put(f"workspaces/{workspace}/datastores/{store}/featuretypes/{name}.json", json={"featureType": payload})
@@ -974,10 +1052,20 @@ class GeoServerClient:
         )
 
     def create_coverage(
-        self, workspace, store, name, *,
-        title=None, abstract=None, srs=None, native_crs=None,
-        enabled=None, native_format=None, projection_policy=None,
-        native_bounding_box=None, lat_lon_bounding_box=None,
+        self,
+        workspace,
+        store,
+        name,
+        *,
+        title=None,
+        abstract=None,
+        srs=None,
+        native_crs=None,
+        enabled=None,
+        native_format=None,
+        projection_policy=None,
+        native_bounding_box=None,
+        lat_lon_bounding_box=None,
         **kwargs,
     ):
         """POST /rest/.../coverages.json — publish a coverage from a coverage store.
@@ -1005,12 +1093,17 @@ class GeoServerClient:
                 title="Digital Elevation Model", srs="EPSG:4326")
         """
         explicit = self._build_payload(
-            {"title": title, "abstract": abstract, "srs": srs,
-             "nativeCRS": native_crs, "enabled": enabled,
-             "nativeFormat": native_format,
-             "projectionPolicy": projection_policy,
-             "nativeBoundingBox": native_bounding_box,
-             "latLonBoundingBox": lat_lon_bounding_box},
+            {
+                "title": title,
+                "abstract": abstract,
+                "srs": srs,
+                "nativeCRS": native_crs,
+                "enabled": enabled,
+                "nativeFormat": native_format,
+                "projectionPolicy": projection_policy,
+                "nativeBoundingBox": native_bounding_box,
+                "latLonBoundingBox": lat_lon_bounding_box,
+            },
             kwargs,
         )
         self._post(
@@ -1020,10 +1113,19 @@ class GeoServerClient:
         return {"workspace": workspace, "store": store, "name": name, "created": True}
 
     def update_coverage(
-        self, workspace, store, name, *,
-        title=None, abstract=None, srs=None, enabled=None,
-        projection_policy=None, advertised=None,
-        native_bounding_box=None, lat_lon_bounding_box=None,
+        self,
+        workspace,
+        store,
+        name,
+        *,
+        title=None,
+        abstract=None,
+        srs=None,
+        enabled=None,
+        projection_policy=None,
+        advertised=None,
+        native_bounding_box=None,
+        lat_lon_bounding_box=None,
         **kwargs,
     ):
         """PUT /rest/.../coverages/{name}.json — update a coverage.
@@ -1048,11 +1150,16 @@ class GeoServerClient:
             client.update_coverage("nurc", "dem", "DEM", enabled=False)
         """
         payload = self._build_payload(
-            {"title": title, "abstract": abstract, "srs": srs,
-             "enabled": enabled, "projectionPolicy": projection_policy,
-             "advertised": advertised,
-             "nativeBoundingBox": native_bounding_box,
-             "latLonBoundingBox": lat_lon_bounding_box},
+            {
+                "title": title,
+                "abstract": abstract,
+                "srs": srs,
+                "enabled": enabled,
+                "projectionPolicy": projection_policy,
+                "advertised": advertised,
+                "nativeBoundingBox": native_bounding_box,
+                "latLonBoundingBox": lat_lon_bounding_box,
+            },
             kwargs,
         )
         self._put(f"workspaces/{workspace}/coveragestores/{store}/coverages/{name}.json", json={"coverage": payload})
@@ -1113,9 +1220,17 @@ class GeoServerClient:
         return self._get(f"workspaces/{workspace}/wmsstores/{store}/wmslayers/{name}.json").json().get("wmsLayer", {})
 
     def create_wmslayer(
-        self, workspace, store, name, *,
-        title=None, abstract=None, srs=None, enabled=None,
-        native_bounding_box=None, lat_lon_bounding_box=None,
+        self,
+        workspace,
+        store,
+        name,
+        *,
+        title=None,
+        abstract=None,
+        srs=None,
+        enabled=None,
+        native_bounding_box=None,
+        lat_lon_bounding_box=None,
         **kwargs,
     ):
         """POST /rest/.../wmslayers.json — publish a layer from a cascaded WMS store.
@@ -1139,9 +1254,14 @@ class GeoServerClient:
                 title="Roads (from remote WMS)", srs="EPSG:4326")
         """
         explicit = self._build_payload(
-            {"title": title, "abstract": abstract, "srs": srs,
-             "enabled": enabled, "nativeBoundingBox": native_bounding_box,
-             "latLonBoundingBox": lat_lon_bounding_box},
+            {
+                "title": title,
+                "abstract": abstract,
+                "srs": srs,
+                "enabled": enabled,
+                "nativeBoundingBox": native_bounding_box,
+                "latLonBoundingBox": lat_lon_bounding_box,
+            },
             kwargs,
         )
         self._post(
@@ -1151,8 +1271,16 @@ class GeoServerClient:
         return {"workspace": workspace, "store": store, "name": name, "created": True}
 
     def update_wmslayer(
-        self, workspace, store, name, *,
-        title=None, abstract=None, srs=None, enabled=None, advertised=None,
+        self,
+        workspace,
+        store,
+        name,
+        *,
+        title=None,
+        abstract=None,
+        srs=None,
+        enabled=None,
+        advertised=None,
         **kwargs,
     ):
         """PUT /rest/.../wmslayers/{name}.json — update a cascaded WMS layer.
@@ -1173,8 +1301,7 @@ class GeoServerClient:
             client.update_wmslayer("topp", "remote_wms", "roads", enabled=False)
         """
         payload = self._build_payload(
-            {"title": title, "abstract": abstract, "srs": srs,
-             "enabled": enabled, "advertised": advertised},
+            {"title": title, "abstract": abstract, "srs": srs, "enabled": enabled, "advertised": advertised},
             kwargs,
         )
         self._put(f"workspaces/{workspace}/wmsstores/{store}/wmslayers/{name}.json", json={"wmsLayer": payload})
@@ -1236,9 +1363,17 @@ class GeoServerClient:
         )
 
     def create_wmtslayer(
-        self, workspace, store, name, *,
-        title=None, abstract=None, srs=None, enabled=None,
-        native_bounding_box=None, lat_lon_bounding_box=None,
+        self,
+        workspace,
+        store,
+        name,
+        *,
+        title=None,
+        abstract=None,
+        srs=None,
+        enabled=None,
+        native_bounding_box=None,
+        lat_lon_bounding_box=None,
         **kwargs,
     ):
         """POST /rest/.../wmtslayers.json — publish a layer from a cascaded WMTS store.
@@ -1261,9 +1396,14 @@ class GeoServerClient:
                 title="OpenStreetMap Tiles", srs="EPSG:3857")
         """
         explicit = self._build_payload(
-            {"title": title, "abstract": abstract, "srs": srs,
-             "enabled": enabled, "nativeBoundingBox": native_bounding_box,
-             "latLonBoundingBox": lat_lon_bounding_box},
+            {
+                "title": title,
+                "abstract": abstract,
+                "srs": srs,
+                "enabled": enabled,
+                "nativeBoundingBox": native_bounding_box,
+                "latLonBoundingBox": lat_lon_bounding_box,
+            },
             kwargs,
         )
         self._post(
@@ -1273,8 +1413,16 @@ class GeoServerClient:
         return {"workspace": workspace, "store": store, "name": name, "created": True}
 
     def update_wmtslayer(
-        self, workspace, store, name, *,
-        title=None, abstract=None, srs=None, enabled=None, advertised=None,
+        self,
+        workspace,
+        store,
+        name,
+        *,
+        title=None,
+        abstract=None,
+        srs=None,
+        enabled=None,
+        advertised=None,
         **kwargs,
     ):
         """PUT /rest/.../wmtslayers/{name}.json — update a cascaded WMTS layer.
@@ -1295,8 +1443,7 @@ class GeoServerClient:
             client.update_wmtslayer("topp", "osm_tiles", "osm", enabled=False)
         """
         payload = self._build_payload(
-            {"title": title, "abstract": abstract, "srs": srs,
-             "enabled": enabled, "advertised": advertised},
+            {"title": title, "abstract": abstract, "srs": srs, "enabled": enabled, "advertised": advertised},
             kwargs,
         )
         self._put(f"workspaces/{workspace}/wmtsstores/{store}/wmtslayers/{name}.json", json={"wmtsLayer": payload})
@@ -1361,9 +1508,16 @@ class GeoServerClient:
         return self._get(path).json().get("layer", {})
 
     def update_layer(
-        self, name, workspace=None, *,
-        default_style=None, enabled=None, queryable=None,
-        opaque=None, advertised=None, **kwargs,
+        self,
+        name,
+        workspace=None,
+        *,
+        default_style=None,
+        enabled=None,
+        queryable=None,
+        opaque=None,
+        advertised=None,
+        **kwargs,
     ):
         """PUT /rest/[workspaces/{ws}/]layers/{name}.json — update layer properties.
 
@@ -1388,9 +1542,7 @@ class GeoServerClient:
         """
         explicit = {}
         if default_style is not None:
-            explicit["defaultStyle"] = (
-                default_style if isinstance(default_style, dict) else {"name": default_style}
-            )
+            explicit["defaultStyle"] = default_style if isinstance(default_style, dict) else {"name": default_style}
         if enabled is not None:
             explicit["enabled"] = enabled
         if queryable is not None:
@@ -1456,8 +1608,15 @@ class GeoServerClient:
         return self._get(path).json().get("layerGroup", {})
 
     def create_layergroup(
-        self, name, layers, workspace=None, *,
-        title=None, abstract_txt=None, mode=None, bounds=None,
+        self,
+        name,
+        layers,
+        workspace=None,
+        *,
+        title=None,
+        abstract_txt=None,
+        mode=None,
+        bounds=None,
         **kwargs,
     ):
         """POST /rest/[workspaces/{ws}/]layergroups.json — create a layer group.
@@ -1495,8 +1654,14 @@ class GeoServerClient:
         return {"name": name, "created": True}
 
     def update_layergroup(
-        self, name, workspace=None, *,
-        title=None, abstract_txt=None, mode=None, bounds=None,
+        self,
+        name,
+        workspace=None,
+        *,
+        title=None,
+        abstract_txt=None,
+        mode=None,
+        bounds=None,
         **kwargs,
     ):
         """PUT /rest/[workspaces/{ws}/]layergroups/{name}.json — update a layer group.
@@ -1704,10 +1869,20 @@ class GeoServerClient:
         return self._get(path).json()
 
     def update_service_settings(
-        self, service, workspace=None, *,
-        enabled=None, title=None, abstract=None, maintainer=None,
-        online_resource=None, fees=None, access_constraints=None,
-        cite_compliant=None, max_features=None, schema_base_url=None,
+        self,
+        service,
+        workspace=None,
+        *,
+        enabled=None,
+        title=None,
+        abstract=None,
+        maintainer=None,
+        online_resource=None,
+        fees=None,
+        access_constraints=None,
+        cite_compliant=None,
+        max_features=None,
+        schema_base_url=None,
         **kwargs,
     ):
         """PUT /rest/services/{svc}/[workspaces/{ws}/]settings.json — update OGC service settings.
@@ -1736,11 +1911,18 @@ class GeoServerClient:
                 max_features=10000, cite_compliant=False)
         """
         payload = self._build_payload(
-            {"enabled": enabled, "title": title, "abstrct": abstract,
-             "maintainer": maintainer, "onlineResource": online_resource,
-             "fees": fees, "accessConstraints": access_constraints,
-             "citeCompliant": cite_compliant, "maxFeatures": max_features,
-             "schemaBaseURL": schema_base_url},
+            {
+                "enabled": enabled,
+                "title": title,
+                "abstrct": abstract,
+                "maintainer": maintainer,
+                "onlineResource": online_resource,
+                "fees": fees,
+                "accessConstraints": access_constraints,
+                "citeCompliant": cite_compliant,
+                "maxFeatures": max_features,
+                "schemaBaseURL": schema_base_url,
+            },
             kwargs,
         )
         svc = service.lower()
@@ -1766,9 +1948,14 @@ class GeoServerClient:
         return self._get("settings.json").json()
 
     def update_settings(
-        self, *,
-        verbose=None, verbose_exceptions=None, num_decimals=None,
-        charset=None, online_resource=None, proxy_base_url=None,
+        self,
+        *,
+        verbose=None,
+        verbose_exceptions=None,
+        num_decimals=None,
+        charset=None,
+        online_resource=None,
+        proxy_base_url=None,
         **kwargs,
     ):
         """PUT /rest/settings.json — update global GeoServer settings.
@@ -1790,9 +1977,14 @@ class GeoServerClient:
                 num_decimals=8)
         """
         payload = self._build_payload(
-            {"verbose": verbose, "verboseExceptions": verbose_exceptions,
-             "numDecimals": num_decimals, "charset": charset,
-             "onlineResource": online_resource, "proxyBaseUrl": proxy_base_url},
+            {
+                "verbose": verbose,
+                "verboseExceptions": verbose_exceptions,
+                "numDecimals": num_decimals,
+                "charset": charset,
+                "onlineResource": online_resource,
+                "proxyBaseUrl": proxy_base_url,
+            },
             kwargs,
         )
         self._put("settings.json", json={"global": payload})
@@ -1809,11 +2001,20 @@ class GeoServerClient:
         return self._get("settings/contact.json").json()
 
     def update_contact(
-        self, *,
-        contact_person=None, contact_organization=None, contact_position=None,
-        contact_email=None, contact_phone=None, contact_fax=None,
-        address=None, address_type=None, address_city=None,
-        address_state=None, address_postal_code=None, address_country=None,
+        self,
+        *,
+        contact_person=None,
+        contact_organization=None,
+        contact_position=None,
+        contact_email=None,
+        contact_phone=None,
+        contact_fax=None,
+        address=None,
+        address_type=None,
+        address_city=None,
+        address_state=None,
+        address_postal_code=None,
+        address_country=None,
         **kwargs,
     ):
         """PUT /rest/settings/contact.json — update contact information.
@@ -1843,12 +2044,20 @@ class GeoServerClient:
                 contact_email="admin@example.com")
         """
         payload = self._build_payload(
-            {"contactPerson": contact_person, "contactOrganization": contact_organization,
-             "contactPosition": contact_position, "contactEmail": contact_email,
-             "contactVoice": contact_phone, "contactFacsimile": contact_fax,
-             "address": address, "addressType": address_type,
-             "addressCity": address_city, "addressState": address_state,
-             "addressPostalCode": address_postal_code, "addressCountry": address_country},
+            {
+                "contactPerson": contact_person,
+                "contactOrganization": contact_organization,
+                "contactPosition": contact_position,
+                "contactEmail": contact_email,
+                "contactVoice": contact_phone,
+                "contactFacsimile": contact_fax,
+                "address": address,
+                "addressType": address_type,
+                "addressCity": address_city,
+                "addressState": address_state,
+                "addressPostalCode": address_postal_code,
+                "addressCountry": address_country,
+            },
             kwargs,
         )
         self._put("settings/contact.json", json={"contact": payload})
@@ -1869,9 +2078,14 @@ class GeoServerClient:
         return self._get(f"workspaces/{workspace}/settings.json").json()
 
     def create_local_settings(
-        self, workspace, *,
-        charset=None, num_decimals=None, verbose=None,
-        verbose_exceptions=None, **kwargs,
+        self,
+        workspace,
+        *,
+        charset=None,
+        num_decimals=None,
+        verbose=None,
+        verbose_exceptions=None,
+        **kwargs,
     ):
         """POST /rest/workspaces/{ws}/settings.json — create workspace-specific settings.
 
@@ -1890,17 +2104,26 @@ class GeoServerClient:
             client.create_local_settings("topp", num_decimals=4, charset="UTF-8")
         """
         payload = self._build_payload(
-            {"charset": charset, "numDecimals": num_decimals,
-             "verbose": verbose, "verboseExceptions": verbose_exceptions},
+            {
+                "charset": charset,
+                "numDecimals": num_decimals,
+                "verbose": verbose,
+                "verboseExceptions": verbose_exceptions,
+            },
             kwargs,
         )
         self._post(f"workspaces/{workspace}/settings.json", json={"settings": payload})
         return {"workspace": workspace, "created": True}
 
     def update_local_settings(
-        self, workspace, *,
-        charset=None, num_decimals=None, verbose=None,
-        verbose_exceptions=None, **kwargs,
+        self,
+        workspace,
+        *,
+        charset=None,
+        num_decimals=None,
+        verbose=None,
+        verbose_exceptions=None,
+        **kwargs,
     ):
         """PUT /rest/workspaces/{ws}/settings.json — update workspace-specific settings.
 
@@ -1917,8 +2140,12 @@ class GeoServerClient:
             client.update_local_settings("topp", num_decimals=6)
         """
         payload = self._build_payload(
-            {"charset": charset, "numDecimals": num_decimals,
-             "verbose": verbose, "verboseExceptions": verbose_exceptions},
+            {
+                "charset": charset,
+                "numDecimals": num_decimals,
+                "verbose": verbose,
+                "verboseExceptions": verbose_exceptions,
+            },
             kwargs,
         )
         self._put(f"workspaces/{workspace}/settings.json", json={"settings": payload})
